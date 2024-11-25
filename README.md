@@ -34,6 +34,9 @@ gnuplot -persist -c  plot.gp input.csv ootput.pdf
 
 Для зручності всі скрипти викликались з інтерфейсу `Toal Commander`, в якому створено файл меню `scripts.bar`.
 
+## Принцип роботи на відео
+
+[![YouTube](http://i.ytimg.com/vi/KedH-uIS5k4/hqdefault.jpg)](https://www.youtube.com/watch?v=KedH-uIS5k4)
 
 ## Для роботи використовувались наступні програми
 
