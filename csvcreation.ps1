@@ -15,6 +15,8 @@ if ($txtFiles.Count -eq 0) {
     exit 1
 }
 
+$flag = $true # Флаг для створення CSV
+   
 # Проходим по каждому файлу
 foreach ($file in $txtFiles) {
     $content = Get-Content $file.FullName
@@ -39,6 +41,7 @@ foreach ($file in $txtFiles) {
     $min = $null
     $point = $null
 
+    
     # Витягуємо два значення Avg.
     $avgLines = $content | Where-Object { $_ -match '^Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }
     if ($avgLines.Count -ge 2) {
@@ -59,35 +62,24 @@ foreach ($file in $txtFiles) {
     if ($maxLine -match '^\d+(\.\d+)?$') {
         $max = $maxLine
     } else {
-        Write-Host "Warning: incorrect --MAX-- value for file $($file.Name)" -ForegroundColor Yellow
+        Write-Host "Warning: incorrect --MAX-- value for time stamp $time" -ForegroundColor Red
     }
 
     if ($minLine -match '^\d+(\.\d+)?$') {
         $min = $minLine
     } else {
-        Write-Host "Warning: incorrect --MIN-- value for file $($file.Name)" -ForegroundColor Yellow
+        Write-Host "Warning: incorrect --MIN-- value for time stamp $time" -ForegroundColor Red
+
     }
 
-    # Проверяем, что значение Point тоже является числом, иначе оставляем null
     if ($pointLine -match '^\d+(\.\d+)?$') {
         $point = $pointLine
     } else {
-        Write-Host "Warning: Incorrect -- POINT-- value for file $($file.Name)" -ForegroundColor Yellow
-        $point = $null  # Залишаємо порожнім (null), якщо значення некоректне
+        Write-Host "Warning: Incorrect -- POINT-- value for time stamp $time" -ForegroundColor Red
     }
 
     # Якщо всі дані коректні, додаємо їх у масив для CSV
-    if ($avg1 -and $avg2) {
-        # Якщо Point не знайдено або некоректний, залишаємо його порожнім
-        if (-not $point) {
-            $point = $null  # Залишаємо порожнім, якщо некоректно витягнуто
-        }
-        if (-not $max) {
-            $max = $null  # Залишаємо порожнім, якщо некоректно витягнуто
-        }
-        if (-not $min) {
-            $min = $null  # Залишаємо порожнім, якщо некоректно витягнуто
-        }
+    if ($avg1 -and $avg2 -and $max -and $min -and $point) {
 
         # Створюємо об'єкт із результатами для CSV
         $csvObject = [PSCustomObject]@{
@@ -96,19 +88,21 @@ foreach ($file in $txtFiles) {
             Avg2  = $avg2
             Max   = $max
             Min   = $min
-            Point = $point   # Якщо порожнє значення, залишимо null
+            Point = $point 
         }
 
         # Додаємо об'єкт у масив
         $csvData += $csvObject
     } else {
-        Write-Host "Warning: data not extracted correctly for the file $($file.Name)" -ForegroundColor Yellow
+        Write-Host "Warning: data not extracted correctly for the time stamp $time" -ForegroundColor Red
+        $flag=$false
     }
 }
 
 # Якщо $csvData порожній, виводимо повідомлення і припиняємо виконання
-if ($csvData.Count -eq 0) {
-    Write-Host "Error: Failed to extract data from files!" -ForegroundColor Red
+if ($csvData.Count -eq 0 -or -not $flag) {
+	Write-Host "===================================================================="
+    Write-Host "Error: Failed to extract data from files! The CSV file was NOT saved" -ForegroundColor Red
     exit 1
 }
 
@@ -122,4 +116,5 @@ $csvData | ForEach-Object {
     "$($_.Time -f '0.0') $($_.Avg1 -f '0.0') $($_.Avg2 -f '0.0') $($_.Max -f '0.0') $($_.Min -f '0.0') $($_.Point -f '0.0')"
 } | Add-Content -Path $OutputFile
 
-Write-Host "The CSV file is saved in $OutputFile"
+Write-Host "===================================="
+Write-Host "The CSV file is saved in $OutputFile" -ForegroundColor Green
