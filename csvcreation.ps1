@@ -47,9 +47,9 @@ foreach ($file in $txtFiles) {
     }
 
     # Витягуємо Max, Min, Point
-    $maxLine = ($content | Where-Object { $_ -match '^Max\.\s*(\d+(\.\d+)?)\s*(°C)?' }) -replace 'Max\.\s*(\d+(\.\d+)?)\s*(°C)?', '$1'
-    $minLine = ($content | Where-Object { $_ -match '^Min\.\s*(\d+(\.\d+)?)\s*(°C)?' }) -replace 'Min\.\s*(\d+(\.\d+)?)\s*(°C)?', '$1'
-    $pointLine = ($content | Where-Object { $_ -match '^\d+\.\d+\s*(°C)?' }) -replace '(\d+(\.\d+)?)\s*°C', '$1'
+    $maxLine = ($content | Where-Object { $_ -match '^Max\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }) -replace 'Max\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
+    $minLine = ($content | Where-Object { $_ -match '^Min\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }) -replace 'Min\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
+    $pointLine = ($content | Where-Object { $_ -match '^\d+\.\d+\s*(°C)?.*$' }) -replace '(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
 
     # Діагностика: виводимо витягнуті дані
     Write-Host "Time: $time"
