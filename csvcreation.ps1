@@ -40,10 +40,10 @@ foreach ($file in $txtFiles) {
     $point = $null
 
     # Витягуємо два значення Avg.
-    $avgLines = $content | Where-Object { $_ -match '^Avg\.\s*(\d+(\.\d+)?)\s*(°C)?' }
+    $avgLines = $content | Where-Object { $_ -match '^Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }
     if ($avgLines.Count -ge 2) {
-        $avg1 = ($avgLines[0] -replace 'Avg\.\s*(\d+(\.\d+)?)\s*(°C)?', '$1')
-        $avg2 = ($avgLines[1] -replace 'Avg\.\s*(\d+(\.\d+)?)\s*(°C)?', '$1')
+        $avg1 = ($avgLines[0] -replace 'Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1')
+        $avg2 = ($avgLines[1] -replace 'Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1')
     }
 
     # Витягуємо Max, Min, Point
@@ -53,9 +53,9 @@ foreach ($file in $txtFiles) {
 
     # Діагностика: виводимо витягнуті дані
     Write-Host "Time: $time"
-    Write-Host "Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine"
+    Write-Host "Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine" -ForegroundColor Yellow
 
-    # Перевіряємо, що витягнуті дані є числами
+    # Перевіряємо, що витягнуті дані є числами    
     if ($maxLine -match '^\d+(\.\d+)?$') {
         $max = $maxLine
     } else {
