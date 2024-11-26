@@ -3,65 +3,44 @@ param (
     [string]$excelFile
 )
 
-# Читання вмісту CSV файлу
-$fileContent = Get-Content $csvFile
+# Читаємо CSV безпосередньо в масив
+$data = Import-Csv -Path $csvFile -Delimiter ' '  # роздільник
 
-# Замінюємо всі послідовності пробілів на один пробіл
-$processedContent = $fileContent -replace '\s+', ' ' -replace '\.', ','
-
-# Тимчасовий файл для обробки
-$processedCsvFile = "$env:TEMP\processed.csv"
-
-# Записуємо оброблений текст у новий файл
-$processedContent | Set-Content -Path $processedCsvFile
-
-# Створюємо COM-об'єкт для Excel
+# Запускаємо Excel
 $excel = New-Object -ComObject Excel.Application
-$excel.Visible = $false  # Можно установить $true для видимости Excel
+$excel.Visible = $false
 
-# Створюємо новий робочий аркуш
+# Створюємо нову книгу
 $workbook = $excel.Workbooks.Add()
 $worksheet = $workbook.Sheets.Item(1)
 
-# Імпортуємо дані з обробленого CSV з пропуском як роздільник
-$queryTable = $worksheet.QueryTables.Add("TEXT;$processedCsvFile", $worksheet.Range("A1"))
-
-# Налаштуємо параметри для роздільника пробілу
-$queryTable.TextFileSpaceDelimiter = $true
-$queryTable.TextFileTabDelimiter = $false
-$queryTable.TextFileCommaDelimiter = $false
-$queryTable.TextFileSemicolonDelimiter = $false
-
-# Вказуємо, що всі стовпці - текстові (щоб не було інтерпретації як дата)
-$queryTable.TextFileColumnDataTypes = 1, 1, 1, 1, 1, 1  # 2 - означає текстовий формат для всіх стовпців
-
-# Оновлюємо таблицю
-$queryTable.Refresh()
-
-
-# Перетворюємо текстові значення на числа (для стовпців, де це необхідно)
-foreach ($cell in $worksheet.UsedRange.Cells) {
-    if ($cell.Value -match '^\d+\,\d+$') {
-        $cell.Value = [double]$cell.Value
-        $cell.NumberFormat = "0,0.0"  # Формат числа с одним знаком после запятой
-    }
+# Записуємо заголовки (імена властивостей) у перший рядок
+$row = 1
+$col = 1
+foreach ($header in $data[0].PSObject.Properties.Name) {
+    $worksheet.Cells.Item($row, $col).Value2 = $header
+    $col++
 }
 
-# Налаштуємо формат чисел з одним десятковим знаком (наприклад, 20.0 відображатиметься як 20,0)
-foreach ($cell in $worksheet.UsedRange.Cells) {
-    if ($cell.Value -match '^\d+\,+\d{1}$') {
-        $cell.NumberFormat = "0,0.0"  # Формат числа с одним знаком после запятой
+$worksheet.Range("A1").Resize(1, $col - 1).Interior.Color = 111111255  # Синій колір
+$worksheet.Range("A1").Resize(1, $col - 1).Font.Color = 16777215  # Білий колір
+# Записуємо дані з масиву в Excel
+$row = 2  # Починаємо з другого рядка для даних
+foreach ($line in $data) {
+    $col = 1
+    foreach ($key in $line.PSObject.Properties.Name) {
+        $value = $line.$key
+        $worksheet.Cells.Item($row, $col).Value2 = [double]$value
+        $worksheet.Cells.Item($row, $col).NumberFormat = "0,0"  
+        $col++
     }
+    $row++
 }
 
-# Зберігаємо в Excel файл
+# Зберігаємо файл
 $workbook.SaveAs($excelFile)
 
 # Закриваємо Excel
+$workbook.Close($false)
 $excel.Quit()
-
-# Звільняємо COM об'єкти
 [System.Runtime.Interopservices.Marshal]::ReleaseComObject($excel) | Out-Null
-
-# Видаляємо тимчасовий файл
-Remove-Item -Path $processedCsvFile
