@@ -97,7 +97,7 @@ Get-ChildItem "$OutputDir\*.png" | ForEach-Object {
 }
 
 # Визначаємо список заборонених символів
-$blacklist = '[\+\]\[»,\*\-_~=>!@$|”“™bdefhjklopqrstuwz]'
+$blacklist = '["\)\(—\\\+\]\[»,\*\-_~=<>!@$|”“™bdefhjklopqrstuwz]'
 
 # Go through each text file in the folder
 Get-ChildItem "$OutputDir\*.txt" | ForEach-Object {
@@ -121,7 +121,7 @@ Get-ChildItem "$OutputDir\*.txt" | ForEach-Object {
     $cleanedContent | Set-Content -Path $TextFilePath
 
     # Діагностика
-    # Write-Host "The file has been cleaned and saved: $TextFilePath"
+    Write-Host "The file has been cleaned and saved: $TextFilePath"
 }
 
 
