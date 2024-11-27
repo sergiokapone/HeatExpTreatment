@@ -36,7 +36,7 @@ if (-Not (Test-Path $OutputDir)) {
 $OutputFilePattern = "$OutputDir\$inputFileName" + "_%04d.png"
 
 # Витягуємо кадри з тимчасовими мітками в іменах
-ffmpeg -i $InputVideo -vf "select=not(mod(n\,1))" -vsync vfr -frame_pts 1 "$OutputFilePattern"
+ffmpeg -i $InputVideo -hide_banner -loglevel error -vf "select=not(mod(n\,1))" -vsync vfr -frame_pts 1 "$OutputFilePattern"
 
 # Отримуємо кількість кадрів у відео
 $frameFiles = Get-ChildItem "$OutputDir\*.png" | Sort-Object CreationTime  # Сортуємо за часом створення
@@ -84,7 +84,7 @@ Get-ChildItem "$OutputDir\*.png" | ForEach-Object {
     # Write-Host "OCR text in: $TextOutputPath"
     
     # Виконання магії з використанням ImageMagick для зміни рівня яскравості
-    & magick "$ImagePath" -level 80%,100% "$TempImagePath"
+    & magick "$ImagePath" -threshold 95% "$TempImagePath"
 
     # Виконання tesseract на тимчасовому файлі
     & "tesseract.exe" "$TempImagePath" "$TextOutputPath" --psm 6 --oem 3
