@@ -2,6 +2,21 @@ param (
     [string]$InputDir   # Папка з текстовими файлами
 )
 
+function Check-Value {
+    param (
+        [string]$value,
+        [string]$type,
+        [string]$time
+    )
+
+    if ($value -match '^\d+\.\d+$') {
+        return $value
+    } else {
+        Write-Host "Warning: incorrect $type value for time stamp $time" -ForegroundColor Red
+        return $null
+    }
+}
+
 $OutputFile = "RESULT.csv"
 # Спочатку створюємо структуру даних для CSV
 $csvData = @()
@@ -58,25 +73,12 @@ foreach ($file in $txtFiles) {
     Write-Host "Time: $time"
     Write-Host "Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine" -ForegroundColor Yellow
 
-    # Перевіряємо, що витягнуті дані є числами    
-    if ($maxLine -match '^\d+\.\d+$') {
-        $max = $maxLine
-    } else {
-        Write-Host "Warning: incorrect --MAX-- value for time stamp $time" -ForegroundColor Red
-    }
-
-    if ($minLine -match '^\d+\.\d+$') {
-        $min = $minLine
-    } else {
-        Write-Host "Warning: incorrect --MIN-- value for time stamp $time" -ForegroundColor Red
-
-    }
-
-    if ($pointLine -match '^\d+\.\d+$') {
-        $point = $pointLine
-    } else {
-        Write-Host "Warning: Incorrect -- POINT-- value for time stamp $time" -ForegroundColor Red
-    }
+    # Перевіряємо, що витягнуті дані є числами
+	$avg1 = Check-Value -value $avg1 -type "--AVG1--" -time $time
+	$avg2 = Check-Value -value $avg2 -type "--AVG2--" -time $time
+	$max = Check-Value -value $maxLine -type "--MAX--" -time $time
+	$min = Check-Value -value $minLine -type "--MIN--" -time $time
+	$point = Check-Value -value $pointLine -type "--POINT--" -time $time
 
     # Якщо всі дані коректні, додаємо їх у масив для CSV
     if ($avg1 -and $avg2 -and $max -and $min -and $point) {
