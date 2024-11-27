@@ -59,20 +59,20 @@ foreach ($file in $txtFiles) {
     Write-Host "Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine" -ForegroundColor Yellow
 
     # Перевіряємо, що витягнуті дані є числами    
-    if ($maxLine -match '^\d+(\.\d+)?$') {
+    if ($maxLine -match '^\d+\.\d+$') {
         $max = $maxLine
     } else {
         Write-Host "Warning: incorrect --MAX-- value for time stamp $time" -ForegroundColor Red
     }
 
-    if ($minLine -match '^\d+(\.\d+)?$') {
+    if ($minLine -match '^\d+\.\d+$') {
         $min = $minLine
     } else {
         Write-Host "Warning: incorrect --MIN-- value for time stamp $time" -ForegroundColor Red
 
     }
 
-    if ($pointLine -match '^\d+(\.\d+)?$') {
+    if ($pointLine -match '^\d+\.\d+$') {
         $point = $pointLine
     } else {
         Write-Host "Warning: Incorrect -- POINT-- value for time stamp $time" -ForegroundColor Red
