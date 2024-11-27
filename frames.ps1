@@ -54,7 +54,7 @@ foreach ($frame in $frameFiles) {
     $TimePadded = "{0:D4}" -f $Time
 
     # Формуємо нове ім'я файлу з тимчасовою міткою
-    $NewName = "$inputFileName" + "_$TimePadded.png"
+    $NewName = "P_" + $inputFileName + "_$TimePadded.png"
     
     $NewPath = [System.IO.Path]::Combine((Resolve-Path $OutputDir).Path, $NewName)
 
@@ -84,7 +84,7 @@ Get-ChildItem "$OutputDir\*.png" | ForEach-Object {
     # Write-Host "OCR text in: $TextOutputPath"
     
     # Виконання магії з використанням ImageMagick для зміни рівня яскравості
-    & magick "$ImagePath" -threshold 95% "$TempImagePath"
+    & magick "$ImagePath" -threshold 96% "$TempImagePath"
 
     # Виконання tesseract на тимчасовому файлі
     & "tesseract.exe" "$TempImagePath" "$TextOutputPath" --psm 6 --oem 3

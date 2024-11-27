@@ -45,9 +45,9 @@ foreach ($file in $txtFiles) {
 
 
     # Діагностика: виводимо вміст файлу і витягнуті дані
-    Write-Host "Processing the file -> $($file.Name)"
-    Write-Host "File contents:"
-    Write-Host $content
+    # Write-Host "Processing the file -> $($file.Name)"
+    # Write-Host "File contents:"
+    # Write-Host $content
 
     # Ініціалізація змінних для значень
     $avg1 = $null
@@ -70,8 +70,7 @@ foreach ($file in $txtFiles) {
     $pointLine = ($content | Where-Object { $_ -match '^\d+\.\d+\s*(°C)?.*$' }) -replace '(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
 
     # Діагностика: виводимо витягнуті дані
-    Write-Host "Time: $time"
-    Write-Host "Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine" -ForegroundColor Yellow
+    # Write-Host "Time: $time Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine" -ForegroundColor Yellow
 
     # Перевіряємо, що витягнуті дані є числами
 	$avg1 = Check-Value -value $avg1 -type "--AVG1--" -time $time
