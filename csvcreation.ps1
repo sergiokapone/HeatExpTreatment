@@ -2,6 +2,24 @@ param (
     [string]$InputDir   # Папка з текстовими файлами
 )
 
+# Общая обработка для всех строк
+function Process-TemperatureLine {
+    param (
+        [string]$line
+    )
+
+    if ($line -match '(\d{3}|\d{2}[\.\s:]\d{1})') {
+        if ($matches[1].Length -eq 3) {
+            # Если длина первой группы 3, вставляем точку после второй цифры
+            return $matches[1].Insert(2, '.')
+        } else {
+            # Если длина первой группы другая, заменяем разделитель (пробел, точку или двоеточие) на точку
+            return $matches[1] -replace '([\.\s:])', '.'
+        }
+    }
+    return $line
+}
+
 function Check-Value {
     param (
         [string]$value,
@@ -62,65 +80,17 @@ foreach ($file in $txtFiles) {
     # Витягуємо два значення Avg.
     $avgLines = $content | Where-Object { $_ -match '^Avg\.\s*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }
     if ($avgLines.Count -ge 2) {
-        $avg1 = $avgLines[0] | ForEach-Object {
-		    if ($matches[1].Length -eq 3) {
-		        # Если длина первой группы 3, вставляем точку после второй цифры
-		        $matches[1].Insert(2, '.')
-			    } else {
-			        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
-			        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
-					}
-				}
-        $avg2 = $avgLines[1] | ForEach-Object {
-		    if ($matches[1].Length -eq 3) {
-		        # Если длина первой группы 3, вставляем точку после второй цифры
-		        $matches[1].Insert(2, '.')
-			    } else {
-			        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
-			        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
-					}
-				}
+        $avg1 = $avgLines[0] | ForEach-Object { Process-TemperatureLine $_ }
+        $avg2 = $avgLines[1] | ForEach-Object { Process-TemperatureLine $_ }
 	    } else {
 	    	$flag_avg = $false
-	    	$avg = $avgLines | ForEach-Object {
-		    if ($matches[1].Length -eq 3) {
-		        # Если длина первой группы 3, вставляем точку после второй цифры
-		        $matches[1].Insert(2, '.')
-			    } else {
-			        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
-			        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
-					}
-				}
+	    	$avg = $avgLines | ForEach-Object { Process-TemperatureLine $_ }
 	    }
 
     # Витягуємо Max, Min, Point
-	$maxLine = ($content | Where-Object { $_ -match '^Max[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object {
-	    if ($matches[1].Length -eq 3) {
-	        # Если длина первой группы 3, вставляем точку после второй цифры
-	        $matches[1].Insert(2, '.')
-	    } else {
-	        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
-	        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
-	    }
-	}
-	$minLine = ($content | Where-Object { $_ -match '^Min[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object {
-	    if ($matches[1].Length -eq 3) {
-	        # Если длина первой группы 3, вставляем точку после второй цифры
-	        $matches[1].Insert(2, '.')
-	    } else {
-	        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
-	        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
-	    }
-	}
-	$pointLine = ($content | Where-Object { $_ -match '^\s*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object {
-	    if ($matches[1].Length -eq 3) {
-	        # Если длина первой группы 3, вставляем точку после второй цифры
-	        $matches[1].Insert(2, '.')
-	    } else {
-	        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
-	        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
-	    }
-	}
+	$maxLine = ($content | Where-Object { $_ -match '^Max[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
+	$minLine = ($content | Where-Object { $_ -match '^Min[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
+	$pointLine = ($content | Where-Object { $_ -match '^\s*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
 
 
 	    
@@ -131,7 +101,7 @@ foreach ($file in $txtFiles) {
     Write-Host "Time: $time Avg: $avg Max: $maxLine Min: $minLine Point: $pointLine" -ForegroundColor Yellow
 
     # Перевіряємо, що витягнуті дані є числами
-    if ($flag_avg){
+    if ($flag_avg) {
 		$avg1 = Check-Value -value $avg1 -type "--AVG1--" -time $time
 		$avg2 = Check-Value -value $avg2 -type "--AVG2--" -time $time
 	} else {
@@ -154,7 +124,7 @@ foreach ($file in $txtFiles) {
 	            Min   = $min
 	            Point = $point 
 		        }
-	        }else {
+	        } else {
 	        $csvObject = [PSCustomObject]@{
 	            Time  = $time
 				Avg   = $avg
@@ -180,7 +150,7 @@ if ($csvData.Count -eq 0 -or -not $flag) {
 }
 
 # Заголовки для CSV
-if ($flag_arg) {
+if ($flag_avg) {
 	$csvHeaders = "Time Avg1 Avg2 Max Min Point"
 } else {
 	$csvHeaders = "Time Avg Max Min Point"
@@ -189,7 +159,7 @@ if ($flag_arg) {
 # Додаємо заголовки у файл
 $csvHeaders | Out-File -FilePath $OutputFile -Encoding UTF8
 # Дописуємо дані
-if ($flag_arg) {
+if ($flag_avg) {
 $csvData | ForEach-Object {
     "$($_.Time -f '0.0') $($_.Avg1 -f '0.0') $($_.Avg2 -f '0.0') $($_.Max -f '0.0') $($_.Min -f '0.0') $($_.Point -f '0.0')"
 } | Add-Content -Path $OutputFile
