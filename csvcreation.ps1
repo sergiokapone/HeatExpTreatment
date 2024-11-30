@@ -31,6 +31,7 @@ if ($txtFiles.Count -eq 0) {
 }
 
 $flag = $true # Флаг для створення CSV
+$flag_avg = $true # Флаг для визначення кількості arg
    
 # Проходим по каждому файлу
 foreach ($file in $txtFiles) {
@@ -50,6 +51,7 @@ foreach ($file in $txtFiles) {
     # Write-Host $content
 
     # Ініціалізація змінних для значень
+    $avg = $null
     $avg1 = $null
     $avg2 = $null
     $max = $null
@@ -58,39 +60,109 @@ foreach ($file in $txtFiles) {
 
     
     # Витягуємо два значення Avg.
-    $avgLines = $content | Where-Object { $_ -match '^Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }
+    $avgLines = $content | Where-Object { $_ -match '^Avg\.\s*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }
     if ($avgLines.Count -ge 2) {
-        $avg1 = ($avgLines[0] -replace 'Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1')
-        $avg2 = ($avgLines[1] -replace 'Avg\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1')
-    }
+        $avg1 = $avgLines[0] | ForEach-Object {
+		    if ($matches[1].Length -eq 3) {
+		        # Если длина первой группы 3, вставляем точку после второй цифры
+		        $matches[1].Insert(2, '.')
+			    } else {
+			        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
+			        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
+					}
+				}
+        $avg2 = $avgLines[1] | ForEach-Object {
+		    if ($matches[1].Length -eq 3) {
+		        # Если длина первой группы 3, вставляем точку после второй цифры
+		        $matches[1].Insert(2, '.')
+			    } else {
+			        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
+			        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
+					}
+				}
+	    } else {
+	    	$flag_avg = $false
+	    	$avg = $avgLines | ForEach-Object {
+		    if ($matches[1].Length -eq 3) {
+		        # Если длина первой группы 3, вставляем точку после второй цифры
+		        $matches[1].Insert(2, '.')
+			    } else {
+			        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
+			        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
+					}
+				}
+	    }
 
     # Витягуємо Max, Min, Point
-    $maxLine = ($content | Where-Object { $_ -match '^Max\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }) -replace 'Max\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
-    $minLine = ($content | Where-Object { $_ -match '^Min\.\s*(\d+(\.\d+)?)\s*(°C)?.*$' }) -replace 'Min\.\s*(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
-    $pointLine = ($content | Where-Object { $_ -match '^\d+\.\d+\s*(°C)?.*$' }) -replace '(\d+(\.\d+)?)\s*(°C)?.*$', '$1'
+	$maxLine = ($content | Where-Object { $_ -match '^Max[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object {
+	    if ($matches[1].Length -eq 3) {
+	        # Если длина первой группы 3, вставляем точку после второй цифры
+	        $matches[1].Insert(2, '.')
+	    } else {
+	        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
+	        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
+	    }
+	}
+	$minLine = ($content | Where-Object { $_ -match '^Min[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object {
+	    if ($matches[1].Length -eq 3) {
+	        # Если длина первой группы 3, вставляем точку после второй цифры
+	        $matches[1].Insert(2, '.')
+	    } else {
+	        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
+	        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
+	    }
+	}
+	$pointLine = ($content | Where-Object { $_ -match '^\s*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object {
+	    if ($matches[1].Length -eq 3) {
+	        # Если длина первой группы 3, вставляем точку после второй цифры
+	        $matches[1].Insert(2, '.')
+	    } else {
+	        # Если длина первой группы другая, разделяем число на части и заменяем разделитель на точку
+	        $matches[1] -replace '([\.\s:])', '.' # заменяем : или пробел на точку
+	    }
+	}
 
+
+	    
+
+	
     # Діагностика: виводимо витягнуті дані
-    # Write-Host "Time: $time Avg1: $avg1, Avg2: $avg2, Max: $maxLine, Min: $minLine, Point: $pointLine" -ForegroundColor Yellow
+    Write-Host "Avg1: $avg1 Avg2: $avg2"
+    Write-Host "Time: $time Avg: $avg Max: $maxLine Min: $minLine Point: $pointLine" -ForegroundColor Yellow
 
     # Перевіряємо, що витягнуті дані є числами
-	$avg1 = Check-Value -value $avg1 -type "--AVG1--" -time $time
-	$avg2 = Check-Value -value $avg2 -type "--AVG2--" -time $time
+    if ($flag_avg){
+		$avg1 = Check-Value -value $avg1 -type "--AVG1--" -time $time
+		$avg2 = Check-Value -value $avg2 -type "--AVG2--" -time $time
+	} else {
+		$avg = Check-Value -value $avg -type "--AVG--" -time $time
+	}
 	$max = Check-Value -value $maxLine -type "--MAX--" -time $time
 	$min = Check-Value -value $minLine -type "--MIN--" -time $time
 	$point = Check-Value -value $pointLine -type "--POINT--" -time $time
 
     # Якщо всі дані коректні, додаємо їх у масив для CSV
-    if ($avg1 -and $avg2 -and $max -and $min -and $point) {
+    if ((($avg1 -and $avg2) -or $avg) -and $max -and $min -and $point) {
 
-        # Створюємо об'єкт із результатами для CSV
-        $csvObject = [PSCustomObject]@{
-            Time  = $time
-            Avg1  = $avg1
-            Avg2  = $avg2
-            Max   = $max
-            Min   = $min
-            Point = $point 
-        }
+        if ($flag_avg) {
+	        # Створюємо об'єкт із результатами для CSV
+	        $csvObject = [PSCustomObject]@{
+	            Time  = $time
+				Avg1  = $avg1
+				Avg2  = $avg2
+	            Max   = $max
+	            Min   = $min
+	            Point = $point 
+		        }
+	        }else {
+	        $csvObject = [PSCustomObject]@{
+	            Time  = $time
+				Avg   = $avg
+	            Max   = $max
+	            Min   = $min
+	            Point = $point 
+		        }	
+	        }
 
         # Додаємо об'єкт у масив
         $csvData += $csvObject
@@ -108,14 +180,24 @@ if ($csvData.Count -eq 0 -or -not $flag) {
 }
 
 # Заголовки для CSV
-$csvHeaders = "Time Avg1 Avg2 Max Min Point"
+if ($flag_arg) {
+	$csvHeaders = "Time Avg1 Avg2 Max Min Point"
+} else {
+	$csvHeaders = "Time Avg Max Min Point"
+}
 
 # Додаємо заголовки у файл
 $csvHeaders | Out-File -FilePath $OutputFile -Encoding UTF8
 # Дописуємо дані
+if ($flag_arg) {
 $csvData | ForEach-Object {
     "$($_.Time -f '0.0') $($_.Avg1 -f '0.0') $($_.Avg2 -f '0.0') $($_.Max -f '0.0') $($_.Min -f '0.0') $($_.Point -f '0.0')"
 } | Add-Content -Path $OutputFile
+} else {
+	$csvData | ForEach-Object {
+    "$($_.Time -f '0.0') $($_.Avg -f '0.0') $($_.Max -f '0.0') $($_.Min -f '0.0') $($_.Point -f '0.0')"
+} | Add-Content -Path $OutputFile
+}
 
 Write-Host "===================================="
 Write-Host "The CSV file is saved in $OutputFile" -ForegroundColor Green
