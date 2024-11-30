@@ -2,7 +2,8 @@ param (
     [string]$InputVideo
 )
 
-
+# Частота зйомки кадрів
+$fps = 30
 
 # Перевіряємо, чи вказано вхідний файл
 if (-Not $InputVideo -or -Not (Test-Path $InputVideo)) {
@@ -50,7 +51,7 @@ foreach ($frame in $frameFiles) {
     $frameIndex++
     
     # Формуємо часову мітку з трьома знаками
-    $Time = $frameIndex * 30 - 30  # Це дасть 0, 30, 60 і т.д.
+    $Time = $frameIndex * $fps - $fps
     $TimePadded = "{0:D4}" -f $Time
 
     # Формуємо нове ім'я файлу з тимчасовою міткою
@@ -84,7 +85,16 @@ Get-ChildItem "$OutputDir\*.png" | ForEach-Object {
     # Write-Host "OCR text in: $TextOutputPath"
     
     # Виконання магії з використанням ImageMagick для зміни рівня яскравості
-    & magick "$ImagePath" -threshold 96% "$TempImagePath"
+    & magick "$ImagePath"  -threshold 91% -fill black `
+    -draw "rectangle 400,320 750,850" `
+    -draw "rectangle 610,319 1440,598" `
+    -draw "rectangle 759,643 1095,860" `
+    -draw "rectangle 700,630 1000,850" `
+    -draw "rectangle 900,571 1101,651" `
+    -draw "rectangle 619,157 1101,596" `
+    -statistic Median 3x3 `
+    -despeckle `
+    "$TempImagePath"
 
     # Виконання tesseract на тимчасовому файлі
     & "tesseract.exe" "$TempImagePath" "$TextOutputPath" --psm 6 --oem 3
