@@ -3,7 +3,7 @@ param (
 )
 
 # Частота зйомки кадрів
-$fps = 30
+$fps = 10
 
 # Перевіряємо, чи вказано вхідний файл
 if (-Not $InputVideo -or -Not (Test-Path $InputVideo)) {
@@ -77,6 +77,8 @@ Get-ChildItem "$OutputDir\*.png" | ForEach-Object {
     $ImagePath = $_.FullName
     $TextOutputPath = "$OutputDir\$($_.BaseName)"
     $TempImagePath = "$OutputDir\temp_$($_.BaseName).png"  # Тимчасовий файл для обробленого зображення
+    $TempICropedPath1 = "$OutputDir\temp_$($_.BaseName)"+"_1"
+    $TempICropedPath2 = "$OutputDir\temp_$($_.BaseName)"+"_2"
 
     # Діагностика
     $ImagePathName = [System.IO.Path]::GetFileName($ImagePath)
@@ -85,22 +87,24 @@ Get-ChildItem "$OutputDir\*.png" | ForEach-Object {
     # Write-Host "OCR text in: $TextOutputPath"
     
     # Виконання магії з використанням ImageMagick для зміни рівня яскравості
-    & magick "$ImagePath"  -threshold 91% -fill black `
-    -draw "rectangle 400,320 750,850" `
-    -draw "rectangle 610,319 1440,598" `
-    -draw "rectangle 759,643 1095,860" `
-    -draw "rectangle 700,630 1000,850" `
-    -draw "rectangle 900,571 1101,651" `
-    -draw "rectangle 619,157 1101,596" `
+    & magick "$ImagePath" `
+    -colorspace Gray `
+    -threshold 95% -fill black `
+	-draw "rectangle 400,320 750,850" `
+	-draw "rectangle 610,319 1440,598" `
+	-draw "rectangle 759,643 1095,860" `
     -statistic Median 3x3 `
     -despeckle `
+    -alpha remove `
+    -negate `
     "$TempImagePath"
+    
 
     # Виконання tesseract на тимчасовому файлі
     & "tesseract.exe" "$TempImagePath" "$TextOutputPath" --psm 6 --oem 3
 
     # Видаляємо тимчасовий файл
-    Remove-Item "$TempImagePath" -Force
+    # Remove-Item "$TempImagePath" -Force
 
     # Діагностика
     # Write-Host "Temporary file deleted: $TempImagePath"
