@@ -88,9 +88,9 @@ foreach ($file in $txtFiles) {
 	    }
 
     # Витягуємо Max, Min, Point
-	$maxLine = ($content | Where-Object { $_ -match '^Max[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
-	$minLine = ($content | Where-Object { $_ -match '^Min[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
-	$pointLine = ($content | Where-Object { $_ -match '^\s*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
+	$maxLine =   ($content | Where-Object { $_ -match '^Max[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
+	$minLine =   ($content | Where-Object { $_ -match '^Min[\.\s]*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' }) | ForEach-Object { Process-TemperatureLine $_ }
+	$pointLine = ($content | Where-Object { $_ -match '^\W*(\d{3}|\d{2}[\.\s:]\d{1})\s*(°C)?.*$' })        | ForEach-Object { Process-TemperatureLine $_ }
 
 
 	    
@@ -171,3 +171,4 @@ $csvData | ForEach-Object {
 
 Write-Host "===================================="
 Write-Host "The CSV file is saved in $OutputFile" -ForegroundColor Green
+Remove-Item "$InputDir\*.txt" -Force
